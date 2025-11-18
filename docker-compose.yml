@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: chatviewer-db
+    environment:
+      POSTGRES_DB: chatviewer
+      POSTGRES_USER: chatviewer
+      POSTGRES_PASSWORD: chatviewer
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatviewer -d chatviewer"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: chatviewer-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 8000
+      DATABASE_URL: ${DATABASE_URL:-postgres://chatviewer:chatviewer@db:5432/chatviewer}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://chatviewer-api:8000}
+    container_name: chatviewer-web
+    depends_on:
+      api:
+        condition: service_started
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+volumes:
+  db-data:

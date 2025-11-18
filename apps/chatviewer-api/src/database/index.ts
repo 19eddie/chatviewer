@@ -3,14 +3,17 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-import { Sequelize } from 'sequelize';
+import { Sequelize, Options } from 'sequelize';
 import * as env from '../env/env';
 
-// create the sqlite database
-const sequelize: Sequelize = new Sequelize(env.getDatabaseUrl(), {
-  dialectOptions: { ssl: { require: true, rejectUnauthorized: false } },
-  ssl: true,
-});
+const options: Options = {};
+
+if (env.isDatabaseSslEnabled()) {
+  options.dialectOptions = { ssl: { require: true, rejectUnauthorized: false } };
+}
+
+// create the database connection
+const sequelize: Sequelize = new Sequelize(env.getDatabaseUrl(), options);
 
 // export the sequelize object
 export { sequelize };
