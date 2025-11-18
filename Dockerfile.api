@@ -1,0 +1,29 @@
+# syntax=docker/dockerfile:1.7
+
+FROM node:20.11.1-alpine3.19 AS base
+WORKDIR /workspace
+
+# Install all dependencies once for the monorepo
+COPY package.json package-lock.json nx.json tsconfig.base.json tsconfig.json ./
+COPY apps/chatviewer-api/package.json apps/chatviewer-api/package.json
+COPY apps/chatviewer-web/package.json apps/chatviewer-web/package.json
+RUN npm ci
+
+# Build the API with Nx (webpack output goes to dist/apps/chatviewer-api)
+COPY . .
+RUN npx nx build chatviewer-api --configuration production
+
+FROM node:20.11.1-alpine3.19 AS runtime
+WORKDIR /opt/chatviewer
+ENV NODE_ENV=production
+
+# Install only production dependencies for the generated package
+COPY --from=base /workspace/package.json ./package.json
+COPY --from=base /workspace/package-lock.json ./package-lock.json
+RUN npm ci --omit=dev
+
+# Copy the compiled API bundle (Nx writes to project-local dist)
+COPY --from=base /workspace/apps/chatviewer-api/dist ./dist
+
+EXPOSE 8000
+CMD ["node", "dist/main.js"]

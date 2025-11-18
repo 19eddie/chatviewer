@@ -15,6 +15,10 @@ export async function userPostController(req: Request, res: Response) {
   // get the google client id from the environment variables
   const googleClientId = process.env.GOOGLE_CLIENT_ID;
 
+  if (!googleClientId || !googleClientSecret) {
+    return res.status(503).json({ message: 'Google Sign-In is not configured' });
+  }
+
   // create new google oauth2 client
   const oauth2Client = new OAuth2Client(googleClientId, googleClientSecret);
 
@@ -65,12 +69,13 @@ export async function userPostController(req: Request, res: Response) {
 // get the user details from the database
 export async function userGetController(req: Request, res: Response) {
   // get the user id and validate it
-  const userID = +res.locals.user_auth_payload?.userId
+  const authPayload = res.locals.user_auth_payload;
 
-  // id from the url should be same as the id from the jwt
-  if (!userID) {
+  if (!authPayload?.userId) {
     return res.status(403).json({ message: 'Not a valid token' });
   }
+
+  const userID = +authPayload.userId;
 
   // get the user details from the database
   const user = await User.findOne({ where: { userId: userID } });
@@ -87,12 +92,13 @@ export async function userGetController(req: Request, res: Response) {
 // update the user details in the database
 export async function userPatchController(req: Request, res: Response) {
   // get the user id and validate it
-  const userID = +res.locals.user_auth_payload?.userId
+  const authPayload = res.locals.user_auth_payload;
 
-  // id from the url should be same as the id from the jwt
-  if (!userID) {
+  if (!authPayload?.userId) {
     return res.status(403).json({ message: 'Not a valid token' });
   }
+
+  const userID = +authPayload.userId;
 
   // get the user details from the database
   const user = await User.findOne({ where: { userId: userID } });
@@ -115,12 +121,13 @@ export async function userPatchController(req: Request, res: Response) {
 // delete the user details from the database
 export async function userDeleteController(req: Request, res: Response) {
   // get the user id and validate it
-  const userID = +res.locals.user_auth_payload?.userId
+  const authPayload = res.locals.user_auth_payload;
 
-  // id from the url should be same as the id from the jwt
-  if (!userID) {
+  if (!authPayload?.userId) {
     return res.status(403).json({ message: 'Not a valid token' });
   }
+
+  const userID = +authPayload.userId;
 
   // get the user details from the database
   const user = await User.findOne({ where: { userId: userID } });

@@ -109,6 +109,23 @@ To run the project local install npm and node js
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 
+<!-- DOCKER QUICK START -->
+## Run with Docker
+
+Prefer a self-contained setup? A Compose stack lives in the repo and spins up the API, web UI, and a Postgres instance with persisted storage.
+
+```sh
+docker compose up --build
+```
+
+- The web client is available on [http://localhost:8080](http://localhost:8080).
+- The API listens on [http://localhost:8000](http://localhost:8000).
+- Chat blobs persist across restarts via the named `db-data` volume.
+- To override defaults (e.g. set a stronger `JWT_SECRET` or custom `DATABASE_URL`), copy `.env.docker.example` to `.env.docker` and pass it with `docker compose --env-file .env.docker up`.
+
+> **Note:** Google Sign-In remains optional. Without configuring `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` the app still works for local preview uploads, but chats will not be stored server-side because authentication is disabled.
+
+
 
 <!-- USAGE EXAMPLES -->
 ## Usage
